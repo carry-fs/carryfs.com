@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <polygon points="82.000,148.000 256.000,248.000 256.000,438.000 82.000,338.000" fill="#FFFFFF"/>
+    <polygon points="256.000,248.000 430.000,148.000 430.000,338.000 256.000,438.000" fill="#FFFFFF"/>
+    <polygon points="256.000,48.000 430.000,148.000 256.000,248.000 82.000,148.000" fill="#111111"/>
+    <polygon points="82.000,148.000 256.000,248.000 256.000,212.000 113.320,130.000" fill="#FFFFFF"/>
+    <polygon points="256.000,248.000 430.000,148.000 398.680,130.000 256.000,212.000" fill="#FFFFFF"/>
+    <polygon points="256.000,248.000 306.460,219.000 306.460,409.000 256.000,438.000" fill="#111111"/>
+    
+    <path d="M 256 48 L 430 148 L 430 338
+             L 256 438 L 82 338 L 82 148 Z"
+          fill="none" stroke="#111111" stroke-width="8"
+          stroke-linejoin="miter" stroke-miterlimit="4"/>
+    <path d="M 82 148 L 256 248 L 430 148"
+          fill="none" stroke="#111111" stroke-width="8"
+          stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="4"/>
+    <path d="M 256 248 L 256 438"
+          fill="none" stroke="#111111" stroke-width="8" stroke-linecap="butt"/>
+    
+    </svg>

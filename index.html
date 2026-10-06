@@ -1,3 +1,109 @@
 <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CarryFS</title>
-<h1>Hello, world</h1>
+<meta name="description" content="An experimental filesystem for the backup disk you carry between macOS, Linux and Windows.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="assets/favicon.ico" sizes="32x32">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<style>
+  :root {
+    --paper: #fff;
+    --ink: #111;
+    --muted: #5c5c5c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #111;
+      --ink: #fff;
+      --muted: #a3a3a3;
+    }
+  }
+
+  * { margin: 0; }
+  html { height: 100%; }
+  body {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 1.125rem/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    display: grid;
+    justify-items: center;
+    gap: 2.5rem;
+    text-align: center;
+  }
+
+  h1 { line-height: 0; }
+  .logo { width: min(15rem, 60vw); height: auto; fill: currentColor; }
+  .logo .paper { fill: var(--paper); }
+  .logo .line { fill: none; stroke: currentColor; stroke-width: 8; stroke-miterlimit: 4; }
+
+  p {
+    max-width: 30ch;
+    color: var(--muted);
+    text-wrap: balance;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: .5em;
+    color: inherit;
+    font-size: 1rem;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: .3em;
+  }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 2px; }
+  a svg { width: 1.1em; height: 1.1em; fill: currentColor; }
+
+  /* The one moment of motion: the cube's outline draws, then its ink faces settle in. */
+  @media (prefers-reduced-motion: no-preference) {
+    .line { animation: draw 1.1s cubic-bezier(.65, 0, .35, 1) backwards; }
+    .line.y { animation-delay: .45s; }
+    .line.v { animation-delay: .75s; }
+    .ink { animation: settle .5s ease-out 1.2s backwards; }
+  }
+  @keyframes draw {
+    from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+  }
+  @keyframes settle { from { opacity: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>
+    <svg class="logo" viewBox="140 44 320 336" role="img" aria-label="CarryFS">
+      <g transform="translate(150 20) scale(.5859375)">
+        <path class="paper" d="M82 148 256 248V438L82 338ZM256 248 430 148V338L256 438Z"/>
+        <path class="ink" d="M256 48 430 148 256 248 82 148Z"/>
+        <path class="paper" d="M82 148 256 248V212L113.32 130ZM256 248 430 148 398.68 130 256 212Z"/>
+        <path class="ink" d="M256 248 306.46 219V409L256 438Z"/>
+        <path class="line" pathLength="1" d="M256 48 430 148V338L256 438 82 338V148Z"/>
+        <path class="line y" pathLength="1" d="M82 148 256 248 430 148"/>
+        <path class="line v" pathLength="1" d="M256 248V438"/>
+      </g>
+      <path d="M38.281,0.984 C54.344,0.984 66.062,-9.188 68.312,-23.578 L57.078,-23.578 C55.219,-14.312 47.469,-9.188 38.375,-9.188 C25.922,-9.188 16.547,-18.656 16.547,-36.328 C16.547,-53.906 25.875,-63.578 38.375,-63.578 C47.469,-63.578 55.219,-58.500 57.078,-49.219 L68.266,-49.219 C65.828,-64.656 53.609,-73.734 38.281,-73.734 C19.438,-73.734 5.516,-59.672 5.516,-36.328 C5.516,-13.094 19.391,0.984 38.281,0.984 Z M95.855,1.219 C104.684,1.219 109.871,-3.219 111.965,-7.469 L112.496,-7.469 L112.496,-0.000 L122.902,-0.000 L122.902,-36.234 C122.902,-52.000 110.355,-55.281 101.559,-55.281 C91.840,-55.281 82.668,-51.469 78.949,-41.703 L89.059,-39.062 C90.574,-42.781 94.574,-46.531 101.715,-46.531 C108.543,-46.531 112.152,-43.016 112.152,-36.969 L112.152,-36.672 C112.152,-32.812 108.012,-32.859 98.387,-31.734 C88.090,-30.562 77.387,-27.828 77.387,-15.438 C77.387,-4.688 85.449,1.219 95.855,1.219 Z M98.246,-7.422 C92.230,-7.422 87.934,-10.109 87.934,-15.281 C87.934,-20.906 92.918,-22.953 98.980,-23.781 C102.293,-24.219 110.590,-25.094 112.215,-26.656 L112.215,-19.672 C112.215,-13.281 106.980,-7.422 98.246,-7.422 Z M137.361,-0.000 L148.096,-0.000 L148.096,-33.156 C148.096,-40.328 153.564,-45.406 161.080,-45.406 C163.330,-45.406 165.924,-45.016 166.705,-44.828 L166.705,-55.078 C165.580,-55.219 163.533,-55.375 162.158,-55.375 C155.768,-55.375 150.346,-51.766 148.346,-45.797 L147.752,-45.797 L147.752,-54.594 L137.361,-54.594 L137.361,-0.000 Z M176.033,-0.000 L186.768,-0.000 L186.768,-33.156 C186.768,-40.328 192.236,-45.406 199.752,-45.406 C202.002,-45.406 204.596,-45.016 205.377,-44.828 L205.377,-55.078 C204.252,-55.219 202.205,-55.375 200.830,-55.375 C194.439,-55.375 189.018,-51.766 187.018,-45.797 L186.424,-45.797 L186.424,-54.594 L176.033,-54.594 L176.033,-0.000 Z M213.971,19.625 C215.283,20.219 218.111,20.797 221.486,20.797 C230.268,20.797 235.689,16.312 239.018,7.562 L262.752,-54.594 L251.221,-54.594 L240.236,-23.578 C238.533,-18.844 237.299,-14.109 236.080,-9.422 C234.908,-14.109 233.783,-18.797 232.127,-23.578 L221.346,-54.594 L209.721,-54.594 L230.471,0.250 L229.299,4.250 C227.299,11.281 223.393,12.641 217.830,11.188 L216.596,10.891 L213.971,19.625 Z M273.053,-0.000 L284.178,-0.000 L284.178,-30.281 L315.037,-30.281 L315.037,-39.797 L284.178,-39.797 L284.178,-63.188 L318.318,-63.188 L318.318,-72.750 L273.053,-72.750 L273.053,-0.000 Z M356.395,1.219 C373.488,1.219 383.348,-7.766 383.348,-20.125 C383.348,-33.250 371.676,-38.234 362.410,-40.625 L355.316,-42.484 C349.754,-43.953 342.238,-46.531 342.238,-53.422 C342.238,-59.578 347.801,-64.062 356.645,-64.062 C364.895,-64.062 370.801,-60.250 371.535,-53.609 L382.379,-53.609 C382.035,-65.188 371.832,-73.734 356.879,-73.734 C342.238,-73.734 331.098,-65.375 331.098,-52.781 C331.098,-42.828 338.129,-36.719 350.051,-33.547 L358.551,-31.203 C366.363,-29.109 372.363,-26.609 372.363,-20.266 C372.363,-13.234 365.582,-8.547 356.348,-8.547 C347.957,-8.547 340.926,-12.250 340.285,-20.219 L329.098,-20.219 C329.785,-6.938 340.035,1.219 356.395,1.219 Z" transform="translate(140.4746 360.4969) scale(.82047041)"/>
+    </svg>
+  </h1>
+  <p>An experimental filesystem for the backup disk you carry between macOS, Linux and Windows.</p>
+  <a href="https://github.com/carry-fs/carryfs">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
+    Source on GitHub
+  </a>
+</main>
+</body>
+</html>
