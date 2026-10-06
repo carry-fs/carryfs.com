@@ -81,6 +81,24 @@
     to { stroke-dasharray: 1; stroke-dashoffset: 0; }
   }
   @keyframes settle { from { opacity: 0; } }
+
+  /* The duck walks, swims and flies a file across. Click to poke it: it drops the file and
+     sulks, then picks the file back up after a few seconds (or on the next click). */
+  .scene {
+    display: block;
+    width: min(30rem, 100vw - 2rem);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .scene:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 2px; }
+  .scene svg { display: block; width: 100%; height: auto; overflow: visible; fill: currentColor; }
+  .scene .stroke { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .scene .paper { fill: var(--paper); }
+  .scene .wing { stroke: var(--paper); stroke-width: 1.2; stroke-linejoin: round; }
+  .scene .brow { stroke: var(--paper); stroke-width: 1.3; stroke-linecap: round; }
 </style>
 </head>
 <body>
@@ -100,10 +118,225 @@
     </svg>
   </h1>
   <p>An experimental filesystem for the backup disk you carry between macOS, Linux and Windows.</p>
+  <button class="scene" type="button" aria-label="Interrupt the copy" aria-pressed="false">
+    <svg id="scene-art" viewBox="0 0 480 120" aria-hidden="true">
+      <defs>
+        <!-- The logo cube. Inline styles: page CSS doesn't reach into <use> copies. -->
+        <g id="cube">
+          <path style="fill:var(--paper)" d="M0-9 8-4.5v9L0 9-8 4.5v-9Z"/>
+          <path d="M0-9 8-4.5 0 0-8-4.5ZM0 0 2.5-1.4v9L0 9Z"/>
+          <path style="fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round" d="M0-9 8-4.5v9L0 9-8 4.5v-9ZM-8-4.5 0 0 8-4.5M0 0v9"/>
+        </g>
+        <clipPath id="pond"><rect x="150" y="80" width="200" height="50"/></clipPath>
+      </defs>
+      <path class="stroke" d="M4 104H148l12 16M350 120V56H476"/>
+      <use href="#cube" x="16" y="95"/>
+      <use href="#cube" x="32" y="95"/>
+      <use href="#cube" x="24" y="81.5"/>
+      <use href="#cube" x="48" y="95" id="source"/>
+      <use href="#cube" x="432" y="47" id="target"/>
+      <use href="#cube" x="448" y="47"/>
+      <use href="#cube" x="464" y="47"/>
+      <use href="#cube" x="456" y="33.5"/>
+      <use href="#cube" id="loose"/>
+      <!-- Facing right, feet at 0,0. The cube hangs from the bill tip (21,-23).
+           The wing is drawn folded back from its shoulder at 0,0; JS places it (4,-15 folded). -->
+      <g id="duck">
+        <g id="duck-body">
+          <path id="leg-a" class="stroke" d="M0 0v6h3"/>
+          <path id="leg-b" class="stroke" d="M0 0v6h3"/>
+          <path d="M-20-21C-14-19-6-19 2-19 9-19 13-15 13-11 13-6 8-5 0-5-9-5-14-8-17-14Z"/>
+          <path id="wing" class="wing" d="M0-2.5C-5-4.5-12-4.5-20-1L-14.5.5-16.5 2.2-10.5 2-12.5 3.8-6.5 3C-3 3.8 0 2.6 1 .5 1.6-1 1-2.5 0-2.5Z"/>
+          <path id="vein" class="stroke" style="stroke-width:1.2" d="M-3-42.5Q-3-40-5.5-40M-1-42.5Q-1-40 1.5-40M-3-35.5Q-3-38-5.5-38M-1-35.5Q-1-38 1.5-38"/>
+          <g id="head">
+            <use href="#cube" x="21" y="-14" id="held"/>
+            <circle cx="8" cy="-26" r="6.5"/>
+            <path d="M12-28.5C16-28.5 19.5-27.5 21.5-26 23-25 22.5-23 20.5-23L12-22.5Z"/>
+            <circle class="paper" cx="9.5" cy="-28" r="1.2"/>
+            <g id="scowl"> <!-- a lid that cuts the eye into a wedge, and a brow above it -->
+              <path d="M7.6-30.5 11.4-26.7V-31.5H7.6Z"/>
+              <path class="brow" d="M8.3-31.4 11.3-28.4"/>
+            </g>
+          </g>
+        </g>
+      </g>
+      <g clip-path="url(#pond)">
+        <g id="waves">
+          <path class="paper" d="M134 108q4-2 8 0t8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0V124H134Z"/>
+          <path class="stroke" d="M134 108q4-2 8 0t8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0"/>
+        </g>
+      </g>
+    </svg>
+  </button>
   <a href="https://github.com/carry-fs/carryfs">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>
     Source on GitHub
   </a>
 </main>
+<script>
+  const io = p => (1 - Math.cos(Math.PI * p)) / 2;
+  const out = p => Math.sin(Math.PI * p / 2);
+  const lin = p => p;
+  const clamp = v => Math.min(Math.max(v, 0), 1);
+
+  // Motion is a track of steps. Each step eases the props it lists from where the previous
+  // step left them; gait props (legs, wings, bobbing) blend over its first .3s instead.
+  // x/y are the duck's feet, sx its facing (flips halfway through a turn), arc lifts y
+  // mid-step. head 18 puts the hanging cube on the ground. `mark` names a step's end time.
+  const GAIT = ['step', 'bob', 'flap', 'legs', 'wing'];
+  function build(pose, steps) {
+    let T = 0;
+    const marks = {};
+    const track = steps.map(({ d, ease = io, arc = 0, mark, ...to }) => {
+      const step = { t: T, d, ease, arc, from: pose, to: pose = { ...pose, ...to } };
+      T += d;
+      if (mark) marks[mark] = T;
+      return step;
+    });
+    return { track, T, marks };
+  }
+  const stepAt = ({ track }, t) => track.findLast(k => k.t <= t);
+  // The pose at time t; a track holds its last pose once it ends.
+  function sample(track, t) {
+    const k = stepAt(track, t);
+    const r = Math.min((t - k.t) / k.d, 1), p = k.ease(r), g = io(clamp((t - k.t) / Math.min(k.d, .3)));
+    const v = {};
+    for (const key in k.to) v[key] = k.from[key] + (k.to[key] - k.from[key]) * (GAIT.includes(key) ? g : p);
+    v.y -= k.arc * Math.sin(Math.PI * r);
+    return v;
+  }
+
+  // The trip ends where it starts.
+  const TRIP = build({ x: 69, y: 104, sx: -1, tilt: 0, head: 18, wing: 0, step: 0, bob: 0, flap: 0, legs: 1, anger: 0 }, [
+    { d: .5, head: -15 },                                                     // grab, lift the cube
+    { d: .3, sx: 1, x: 76, arc: 4 },                                          // hop around
+    { d: 2.2, x: 148, step: 1, ease: lin },                                   // walk to the water
+    { d: .6, x: 166, y: 115, step: 0, bob: 1 },                               // wade in
+    { d: 3.6, x: 300, ease: lin },                                            // swim
+    { d: 1.1, x: 366, y: 46, tilt: -14, wing: 65, flap: 1, bob: 0, legs: 0, arc: 12 }, // take off
+    { d: .5, x: 392, y: 56, tilt: 0, flap: 0, legs: 1, ease: out },           // land, wings up
+    { d: .5, x: 411, wing: 0, step: 1, ease: lin },                           // walk to the pile
+    { d: .45, head: 18, step: 0, mark: 'drop' },                              // set the cube down
+    { d: .3, head: 0 },
+    { d: .3, sx: -1, x: 402, arc: 4 },                                        // hop around
+    { d: 1.5, x: 290, y: 115, tilt: 8, wing: 65, flap: 1, legs: 0, arc: 40 }, // fly down to the water
+    { d: .4, x: 282, tilt: 0, wing: 0, flap: 0, bob: 1, ease: out },          // splash down
+    { d: 3.2, x: 166, ease: lin },                                            // swim back
+    { d: .6, x: 148, y: 104, bob: 0, legs: 1, step: 1 },                      // wade out
+    { d: 2, x: 69, ease: lin },                                               // walk home
+    { d: .5, step: 0, head: 18 },                                             // reach for the next cube
+  ]);
+
+  const el = id => document.getElementById(id);
+  const [svg, duck, body, legA, legB, wing, head, held, loose, scowl, vein, source, target, waves] =
+    ['scene-art', 'duck', 'duck-body', 'leg-a', 'leg-b', 'wing', 'head', 'held', 'loose', 'scowl', 'vein', 'source', 'target', 'waves'].map(el);
+
+  // Clocks: `trip` drives the trip and stops while the duck sulks; `now` drives gait and waves.
+  // `poke` is the interruption: the flinch-and-sulk track, then the recovery track back into the trip.
+  // The duck sulks for SULK seconds after a poke, or until the next click.
+  const SULK = 3;
+  let trip, now, poke = null; // clocks start below, once the motion preference is known
+
+  function startPoke() {
+    const t = trip % TRIP.T, v = sample(TRIP, t);
+    let cube = null;
+    if (t < TRIP.marks.drop) {
+      // The cube falls from the bill to where the duck's grab pose (head 18) reaches it again.
+      const r = held.getBoundingClientRect();
+      const from = new DOMPoint(r.x + r.width / 2, r.y + r.height / 2).matrixTransform(svg.getScreenCTM().inverse());
+      cube = { from, to: { x: v.x + (v.sx < 0 ? -21.15 : 21.15), y: v.y - 9 } };
+    }
+    poke = {
+      at: now, cube, track: build(v, [
+        { d: .2, y: v.y - 4, wing: 50, anger: 1, step: 0, bob: 0, ease: out }, // flinch
+        { d: .15, y: v.y, wing: 0 },
+        { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                              // stamp
+        { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                              // stamp
+        { d: .3, head: -25 },                                                  // bill up, sulk
+      ]),
+    };
+  }
+  function recover() {
+    const v = sample(poke.track, now - poke.at), back = sample(TRIP, trip % TRIP.T);
+    poke.back = now;
+    poke.recover = build(v, poke.cube
+      ? [{ d: .35, head: 18, anger: 0, mark: 'grab' }, { d: .35, ...back }]  // pick the cube up again
+      : [{ d: .3, ...back }]);
+  }
+
+  function draw() {
+    const t = trip % TRIP.T;
+    let v = sample(TRIP, t), carrying = t < TRIP.marks.drop, dropped = null;
+    if (poke) {
+      v = poke.recover ? sample(poke.recover, now - poke.back) : sample(poke.track, now - poke.at);
+      const regrabbed = poke.recover && now - poke.back >= poke.recover.marks.grab;
+      if (poke.cube && !regrabbed) {
+        const f = clamp((now - poke.at) / .3), { from, to } = poke.cube;
+        dropped = [from.x + (to.x - from.x) * f, from.y + (to.y - from.y) * f * f];
+        carrying = false;
+      }
+    }
+
+    const stride = Math.sin(2 * Math.PI * now / .34);
+    const swing = 26 * v.step * stride;
+    const y = v.y - 1.2 * v.step * Math.abs(stride) + .8 * v.bob * Math.sin(2 * Math.PI * now / 1.3);
+    const tuck = 75 * (1 - v.legs), len = .4 + .6 * v.legs;
+    duck.setAttribute('transform', `translate(${v.x} ${y}) scale(${v.sx < 0 ? -1 : 1} 1)`);
+    body.setAttribute('transform', `rotate(${v.tilt + 2 * v.step * stride} 0 -13)`);
+    legA.setAttribute('transform', `translate(-3 -6) rotate(${tuck + swing}) scale(1 ${len})`);
+    legB.setAttribute('transform', `translate(2 -6) rotate(${tuck - swing}) scale(1 ${len})`);
+    // Raising the wing slides its shoulder back from under the head and spreads it. A flap
+    // sweeps it 105° down, foreshortened mid-stroke where it points toward us.
+    const lift = clamp(v.wing / 65), down = v.flap * (1 - Math.cos(2 * Math.PI * now / .3)) / 2;
+    const reach = (1 + .25 * lift) * (1 - .4 * Math.sin(Math.PI * down));
+    wing.setAttribute('transform', `translate(${4 - 6 * lift} ${-15 - 3 * lift}) rotate(${v.wing - 105 * down}) scale(${reach} ${1 + .3 * lift})`);
+    head.setAttribute('transform', `rotate(${v.head} 5 -20)`);
+    held.setAttribute('transform', `rotate(${-v.head} 21 -23)`);    // hangs straight down from the bill
+    held.style.visibility = carrying ? '' : 'hidden';
+    loose.style.visibility = dropped ? '' : 'hidden';
+    if (dropped) loose.setAttribute('transform', `translate(${dropped})`);
+    scowl.style.opacity = vein.style.opacity = v.anger;
+    source.style.opacity = clamp((t - 6) / .6);                     // a new file appears at the source
+    target.style.opacity = t < TRIP.marks.drop ? 0 : 1 - clamp((t - 15) / .6); // the delivered one fades out
+    waves.setAttribute('transform', `translate(${-8 * (now % 2)} 0)`);
+  }
+
+  const scene = document.querySelector('.scene');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const seek = new URLSearchParams(location.search).get('t'); // ?t=8.5 freezes that moment
+  let running = false, queued = false, last, raf = 0;
+  trip = now = seek ? +seek : reduce.matches ? 7 : TRIP.T - .5;
+
+  // A poke waits until the duck is on the ground or water: no flying or hopping step.
+  const grounded = () => { const k = stepAt(TRIP, trip % TRIP.T); return !k.arc && !k.from.flap && !k.to.flap; };
+  const setPressed = () => scene.setAttribute('aria-pressed', !!poke || !running);
+
+  function tick(ms) {
+    const dt = Math.min(ms - (last ?? ms), 100) / 1000; // cap the step after a backgrounded tab
+    last = ms;
+    now += dt;
+    if (!poke) trip += dt;
+    if (poke && !poke.recover && now - poke.at >= SULK) recover();
+    if (poke?.recover && now - poke.back >= poke.recover.T) { poke = null; setPressed(); }
+    if (!poke && queued && grounded()) { queued = false; startPoke(); setPressed(); }
+    draw();
+    raf = requestAnimationFrame(tick);
+  }
+  function play(on) {
+    cancelAnimationFrame(raf);
+    running = on;
+    last = undefined;
+    if (on) raf = requestAnimationFrame(tick);
+    setPressed();
+  }
+  scene.addEventListener('click', () => {
+    if (poke && !poke.recover) recover();
+    else if (running) queued = true;
+    play(true);
+  });
+  reduce.addEventListener('change', () => play(!reduce.matches));
+  draw();
+  play(!seek && !reduce.matches);
+</script>
 </body>
 </html>
