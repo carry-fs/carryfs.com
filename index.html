@@ -216,6 +216,14 @@
           <path id="leg-a" class="stroke" d="M0 0v6h3"/>
           <path id="leg-b" class="stroke" d="M0 0v6h3"/>
           <path d="M-20-21C-14-19-6-19 2-19 9-19 13-15 13-11 13-6 8-5 0-5-9-5-14-8-17-14Z"/>
+          <!-- Champagne, held upright in the wing out front. Origin at its base; the mouth is at (0,-28). -->
+          <g id="bottle" style="visibility:hidden">
+            <path d="M-3.6-1.2Q-3.6 0-2.4 0H2.4Q3.6 0 3.6-1.2V-14C3.6-18 1.4-18.5 1.4-22V-27H-1.4V-22C-1.4-18.5-3.6-18-3.6-14Z"/>
+            <rect x="-2.1" y="-28.4" width="4.2" height="1.8" rx=".6"/>
+            <rect class="paper" x="-3.6" y="-12" width="7.2" height="5"/>
+            <rect id="capped" x="-1.5" y="-31.8" width="3" height="3.6" rx=".7"/>
+            <g id="mouth" transform="translate(0 -28)"/>
+          </g>
           <path id="wing" class="wing" d="M0-2.5C-5-4.5-12-4.5-20-1L-14.5.5-16.5 2.2-10.5 2-12.5 3.8-6.5 3C-3 3.8 0 2.6 1 .5 1.6-1 1-2.5 0-2.5Z"/>
           <path id="vein" class="stroke" style="stroke-width:1.2" d="M-3-42.5Q-3-40-5.5-40M-1-42.5Q-1-40 1.5-40M-3-35.5Q-3-38-5.5-38M-1-35.5Q-1-38 1.5-38"/>
           <g id="head">
@@ -236,6 +244,7 @@
           <path class="stroke" d="M134 108q4-2 8 0t8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0"/>
         </g>
       </g>
+      <g id="spray"><rect id="cork" x="-1.5" y="-2" width="3" height="4" rx=".7" style="visibility:hidden"/></g>
     </svg>
   </button>
   <a href="https://github.com/carry-fs/carryfs">
@@ -277,7 +286,7 @@
   }
 
   // The trip ends where it starts.
-  const TRIP = build({ x: 69, y: 104, sx: -1, tilt: 0, head: 18, wing: 0, step: 0, bob: 0, flap: 0, legs: 1, anger: 0 }, [
+  const TRIP = build({ x: 69, y: 104, sx: -1, tilt: 0, head: 18, wing: 0, step: 0, bob: 0, flap: 0, legs: 1, anger: 0, bottle: 0, shake: 0, groove: 0, grip: 0 }, [
     { d: .5, head: -15 },                                                     // grab, lift the cube
     { d: .3, sx: 1, x: 76, arc: 4 },                                          // hop around
     { d: 2.2, x: 148, step: 1, ease: lin },                                   // walk to the water
@@ -298,16 +307,64 @@
   ]);
 
   const el = id => document.getElementById(id);
-  const [svg, duck, body, legA, legB, wing, head, held, loose, scowl, vein, source, target, waves] =
-    ['scene-art', 'duck', 'duck-body', 'leg-a', 'leg-b', 'wing', 'head', 'held', 'loose', 'scowl', 'vein', 'source', 'target', 'waves'].map(el);
+  const [svg, duck, body, legA, legB, wing, head, held, loose, scowl, vein, source, target, waves, bottle, capped, mouth, spray, cork] =
+    ['scene-art', 'duck', 'duck-body', 'leg-a', 'leg-b', 'wing', 'head', 'held', 'loose', 'scowl', 'vein', 'source', 'target', 'waves',
+     'bottle', 'capped', 'mouth', 'spray', 'cork'].map(el);
 
   // Clocks: `trip` drives the trip and stops while the duck sulks; `now` drives gait and waves.
   // `poke` is the interruption: the flinch-and-sulk track, then the recovery track back into the trip.
-  // The duck sulks for SULK seconds after a poke, or until the next click.
-  const SULK = 3;
+  // The duck sulks for SULK seconds after a poke, or until the next click. A copy sets off a party
+  // instead: same interruption, but it dances for DANCE seconds after the pop, and each further copy
+  // refills that time. `poke.until` is when the interruption ends.
+  const SULK = 3, DANCE = 1.8;
   let trip, now, poke = null; // clocks start below, once the motion preference is known
 
-  function startPoke() {
+  // Spray: droplets are flung from the bottle mouth and their positions are a function of `now`.
+  // They come from a fixed pool, so a flurry of copies can't pile up elements.
+  const GRAVITY = 260;
+  const pool = Array.from({ length: 90 }, () => {
+    const c = spray.appendChild(document.createElementNS(svg.namespaceURI, 'circle'));
+    c.setAttribute('r', .8 + Math.random());
+    c.style.visibility = 'hidden';
+    return c;
+  });
+  const drops = [];
+  let feet = 104, spill = 0; // where drops land, and the fraction of a droplet owed to the stream
+
+  // Throws n droplets out of the bottle mouth, fanned to both sides of its axis. `thing` swaps in the cork, which goes straight up it.
+  function spout(n, min, max, thing) {
+    if (n < 1) return;
+    const m = svg.getScreenCTM().inverse().multiply(mouth.getScreenCTM());
+    const len = Math.hypot(m.c, m.d), ax = -m.c / len, ay = -m.d / len; // the bottle's axis in scene space
+    for (let i = 0; i < n; i++) {
+      const c = thing?.c ?? pool.pop();
+      if (!c) return;
+      const a = thing ? 0 : (Math.random() < .5 ? -1 : 1) * (.35 + Math.random() * .9), s = min + Math.random() * (max - min);
+      drops.push({ c, x: m.e, y: m.f, vx: s * (ax * Math.cos(a) - ay * Math.sin(a)), vy: s * (ax * Math.sin(a) + ay * Math.cos(a)),
+        t0: now, life: .7 + Math.random() * .5, floor: feet, ...thing });
+      c.style.visibility = '';
+    }
+  }
+  function pop() {
+    poke.popped = true;
+    spout(36, 90, 170);
+    spout(1, 170, 170, { c: cork, life: 1.4, spin: 720 });
+  }
+  function drawDrops() {
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i], a = now - d.t0, r = a / d.life, y = d.y + d.vy * a + GRAVITY * a * a / 2;
+      if (r >= 1 || y > d.floor) {
+        d.c.style.visibility = 'hidden';
+        if (d.c !== cork) pool.push(d.c);
+        drops.splice(i, 1);
+        continue;
+      }
+      d.c.setAttribute('transform', `translate(${d.x + d.vx * a} ${y})${d.spin ? ` rotate(${d.spin * a})` : ''}`);
+      d.c.style.opacity = clamp((1 - r) * 4);
+    }
+  }
+
+  function startPoke(party) {
     const t = trip % TRIP.T, v = sample(TRIP, t);
     let cube = null;
     if (t < TRIP.marks.drop) {
@@ -316,15 +373,31 @@
       const from = new DOMPoint(r.x + r.width / 2, r.y + r.height / 2).matrixTransform(svg.getScreenCTM().inverse());
       cube = { from, to: { x: v.x + (v.sx < 0 ? -21.15 : 21.15), y: v.y - 9 } };
     }
-    poke = {
-      at: now, cube, track: build(v, [
-        { d: .2, y: v.y - 4, wing: 50, anger: 1, step: 0, bob: 0, ease: out }, // flinch
-        { d: .15, y: v.y, wing: 0 },
-        { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                              // stamp
-        { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                              // stamp
-        { d: .3, head: -25 },                                                  // bill up, sulk
-      ]),
-    };
+    const track = build(v, party ? [
+      { d: .35, groove: 1, wing: 35, head: -12, step: 0, ease: out },          // start dancing
+      { d: .7, ease: lin },
+      { d: .3, bottle: 1, grip: 1, wing: 0, ease: out },                       // take the bottle in a wing
+      { d: .45, shake: 1, ease: lin, mark: 'pop' },                            // shake it
+      { d: .15, y: v.y - 6, head: -30, shake: 0, ease: out },                  // pop: head snaps back
+      { d: .3, y: v.y, head: -20 },                                            // keep dancing and spraying until the party ends
+    ] : [
+      { d: .2, y: v.y - 4, wing: 50, anger: 1, step: 0, bob: 0, ease: out },   // flinch
+      { d: .15, y: v.y, wing: 0 },
+      { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                                // stamp
+      { d: .1, y: v.y - 2 }, { d: .1, y: v.y },                                // stamp
+      { d: .3, head: -25 },                                                    // bill up, sulk
+    ]);
+    poke = { at: now, cube, track, party, popped: false, until: now + (party ? track.T + DANCE : SULK) };
+  }
+  // A copy: dance, or if the duck is already partying, keep it going with another squirt.
+  function celebrate() {
+    if (!running) return;
+    if (poke?.party && !poke.recover) {
+      if (poke.popped) { poke.until = now + DANCE; spout(14, 80, 150); }
+      return;
+    }
+    if (poke && !poke.recover) recover(); // end the sulk first
+    queued = 'party';
   }
   function recover() {
     const v = sample(poke.track, now - poke.at), back = sample(TRIP, trip % TRIP.T);
@@ -349,22 +422,28 @@
 
     const stride = Math.sin(2 * Math.PI * now / .34);
     const swing = 26 * v.step * stride;
-    const y = v.y - 1.2 * v.step * Math.abs(stride) + .8 * v.bob * Math.sin(2 * Math.PI * now / 1.3);
+    const beat = Math.sin(Math.PI * now / .45); // the dance: a hop per beat, a sway per two
+    feet = v.y;
+    const y = v.y - 1.2 * v.step * Math.abs(stride) + .8 * v.bob * Math.sin(2 * Math.PI * now / 1.3) - 5 * v.groove * Math.abs(beat);
     const tuck = 75 * (1 - v.legs), len = .4 + .6 * v.legs;
     duck.setAttribute('transform', `translate(${v.x} ${y}) scale(${v.sx < 0 ? -1 : 1} 1)`);
-    body.setAttribute('transform', `rotate(${v.tilt + 2 * v.step * stride} 0 -13)`);
+    body.setAttribute('transform', `rotate(${v.tilt + 2 * v.step * stride + 8 * v.groove * beat} 0 -13)`);
     legA.setAttribute('transform', `translate(-3 -6) rotate(${tuck + swing}) scale(1 ${len})`);
     legB.setAttribute('transform', `translate(2 -6) rotate(${tuck - swing}) scale(1 ${len})`);
     // Raising the wing slides its shoulder back from under the head and spreads it. A flap
     // sweeps it 105° down, foreshortened mid-stroke where it points toward us.
     const lift = clamp(v.wing / 65), down = v.flap * (1 - Math.cos(2 * Math.PI * now / .3)) / 2;
     const reach = (1 + .25 * lift) * (1 - .4 * Math.sin(Math.PI * down));
-    wing.setAttribute('transform', `translate(${4 - 6 * lift} ${-15 - 3 * lift}) rotate(${v.wing - 105 * down}) scale(${reach} ${1 + .3 * lift})`);
+    wing.setAttribute('transform', `translate(${4 - 6 * lift} ${-15 - 3 * lift}) rotate(${v.wing - 105 * down + 25 * v.groove * (1 - v.grip) * beat + 193 * v.grip}) scale(${reach} ${1 + .3 * lift})`);
     head.setAttribute('transform', `rotate(${v.head} 5 -20)`);
     held.setAttribute('transform', `rotate(${-v.head} 21 -23)`);    // hangs straight down from the bill
     held.style.visibility = carrying ? '' : 'hidden';
     loose.style.visibility = dropped ? '' : 'hidden';
     if (dropped) loose.setAttribute('transform', `translate(${dropped})`);
+    bottle.style.visibility = v.bottle > .01 ? '' : 'hidden';
+    bottle.setAttribute('transform', `translate(27 -4) rotate(${8 + 16 * v.groove * beat + 6 * v.shake * Math.sin(2 * Math.PI * now / .08)}) scale(${v.bottle})`);
+    capped.style.visibility = poke?.popped ? 'hidden' : '';
+    drawDrops();
     scowl.style.opacity = vein.style.opacity = v.anger;
     source.style.opacity = clamp((t - 6) / .6);                     // a new file appears at the source
     target.style.opacity = t < TRIP.marks.drop ? 0 : 1 - clamp((t - 15) / .6); // the delivered one fades out
@@ -374,7 +453,7 @@
   const scene = document.querySelector('.scene');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const seek = new URLSearchParams(location.search).get('t'); // ?t=8.5 freezes that moment
-  let running = false, queued = false, last, raf = 0;
+  let running = false, queued = false, last, raf = 0; // queued: 'sulk' or 'party', once the duck is grounded
   trip = now = seek ? +seek : reduce.matches ? 7 : TRIP.T - .5;
 
   // A poke waits until the duck is on the ground or water: no flying or hopping step.
@@ -386,10 +465,16 @@
     last = ms;
     now += dt;
     if (!poke) trip += dt;
-    if (poke && !poke.recover && now - poke.at >= SULK) recover();
+    if (poke && !poke.recover && now >= poke.until) recover();
+    if (poke?.party && !poke.popped && !poke.recover && now - poke.at >= poke.track.marks.pop) pop();
     if (poke?.recover && now - poke.back >= poke.recover.T) { poke = null; setPressed(); }
-    if (!poke && queued && grounded()) { queued = false; startPoke(); setPressed(); }
+    if (!poke && queued && grounded()) { startPoke(queued === 'party'); queued = false; setPressed(); }
     draw();
+    if (poke?.popped && !poke.recover) { // the stream, until the party winds down
+      spill += 70 * dt;
+      spout(Math.floor(spill), 65, 125);
+      spill %= 1;
+    }
     raf = requestAnimationFrame(tick);
   }
   function play(on) {
@@ -401,7 +486,7 @@
   }
   scene.addEventListener('click', () => {
     if (poke && !poke.recover) recover();
-    else if (running) queued = true;
+    else if (running) queued ||= 'sulk';
     play(true);
   });
   reduce.addEventListener('change', () => play(!reduce.matches));
@@ -444,6 +529,7 @@
         await navigator.clipboard.writeText(code.textContent);
         label.textContent = 'Copied';
         btn.classList.add('copied');
+        celebrate();
       } catch {
         // Clipboard API needs a secure context; leave the command selected so Ctrl/Cmd+C works.
         getSelection().selectAllChildren(code);
